@@ -80,6 +80,45 @@ public class GenericWorkers {
 
 You can also use typed input/output classes instead of `Map<String, Object>`.
 
+## 5) Use placeholders and SpEL in `@WorkerFunction`
+
+You can keep worker names and steps configurable using property placeholders, and use SpEL (`#{...}`) for dynamic values.
+
+### Property placeholders (with default)
+
+```java
+@WorkerFunction(
+    name = "${unmeshed.worker.first.name:first-worker}",
+    namespace = "${unmeshed.namespace:spring}",
+    maxInProgressExpression = "${unmeshed.worker.first.max-in-progress:100}",
+    workStepNames = {
+        "${unmeshed.worker.first.step1:first-worker-1}",
+        "${unmeshed.worker.first.step2:first-worker-2}"
+    }
+)
+```
+
+### SpEL examples
+
+```java
+@WorkerFunction(
+    name = "#{'${unmeshed.worker.second.name:second-worker}' + '.' + (systemEnvironment['HOST'] ?: 'local').toLowerCase()}",
+    namespace = "#{(systemEnvironment['USER'] ?: 'spring')}",
+    workStepNames = {
+        "#{ (systemEnvironment['HOST'] != null) ? 'hosted-step' : 'local-step' }",
+        "#{ 'STEP-' + '${unmeshed.worker.second.name:second-worker}'.toUpperCase() }"
+    }
+)
+```
+
+Example properties:
+
+```properties
+unmeshed.namespace=spring
+unmeshed.worker.first.max-in-progress=200
+unmeshed.worker.second.max-in-progress=200
+```
+
 ## Run
 
 ```bash
